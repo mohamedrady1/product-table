@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Table with Download</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap");
+      body {
+        font-family: "Cairo", sans-serif;
+        overflow-x: hidden;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      /* Styles for the product table */
+      .product-table {
+        width: 90%;
+        border-collapse: collapse;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin: 20px auto;
+        text-align: center;
+      }
+
+      .product-table th {
+        background-color: #99b19c; /* اللون الأخضر الفاتح */
+        color: white;
+        padding: 40px;
+        text-align: left;
+        text-align: center;
+        font-size: 22px;
+      }
+
+      .product-table td {
+        padding: 15px !important;
+        border-bottom: 2px solid #aaaaaa5c;
+        vertical-align: middle;
+      }
+
+      .product-table td input[type="number"] {
+        width: 50px;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+      }
+      td img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        margin-right: 15px;
+      }
+
+      td p {
+        margin: 0;
+      }
+
+      td.description {
+        font-size: 12px;
+        color: #999;
+      }
+
+      input[type="text"] {
+        width: 200px;
+      }
+
+      /* End Styles for the product table */
+
+      /* start inputs styles */
+
+      .input-container {
+        background-color: #ffffff;
+        padding: 0px 20px;
+        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        justify-content: space-between;
+        margin: 20px 75px;
+      }
+
+      .input-container input {
+        border: none;
+        outline: none;
+        background-color: transparent;
+        color: #6c6c6c;
+        font-size: 18px;
+        width: 500px;
+        text-align: left;
+        line-height: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      .input-container input:focus {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      }
+      .input-container input::placeholder {
+        color: #6c6c6c;
+      }
+
+      /* End inputs styles */
+
+      /* start button styles */
+
+      button {
+        padding: 20px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        background-color: white;
+        cursor: pointer;
+        outline: 0;
+        border: 0;
+        color: black;
+      }
+      button:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+
+        transition: 0.5s;
+      }
+      button.open-popup-btn {
+        margin: 20px 90px;
+      }
+
+      /* End button styles */
+
+      /* start popup styles */
+
+      .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .popup-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .popup {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        width: fit-content;
+        max-width: 80%;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transform: scale(0);
+        transition: transform 0.3s ease;
+      }
+
+      .popup.active {
+        transform: scale(1);
+      }
+
+      /* message styles */
+
+      .successful {
+        width: fit-content;
+        padding: 10px 25px;
+        background: green;
+        border-radius: 15px;
+        color: white;
+        font-size: 22px;
+        position: absolute;
+        right: 10px;
+        bottom: -50px;
+        transform: translateX(150%);
+        transition: 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <h2
+      style="
+        margin: 10px auto;
+        text-align: center;
+        font-size: 60px;
+        width: 100%;
+      "
+    >
+      Products Table
+    </h2>
+    <div class="input-container">
+      <input
+        type="text"
+        id="zipFileName"
+        placeholder="Enter the name of the zip"
+      />
+    </div>
+    <table class="product-table" id="itemsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Price</th>
+          <th>image</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="btn" style="width: 100%; text-align: right">
+      <button class="open-popup-btn">Download Images as Zip</button>
+    </div>
+
+    <!-- start popup -->
+
+    <div class="popup-overlay" id="popupOverlay">
+      <!-- Popup Box -->
+
+      <div class="popup" id="popupBox">
+        <h3 style="text-align: center; font-size: 25px">Export</h3>
+
+        <div class="input-container">
+          <input
+            type="text"
+            placeholder="Enter the width of image (min = 400)"
+            id="width"
+          />
+          <input
+            type="text"
+            placeholder="Enter the height of image (min = 400)"
+            id="height"
+          />
+        </div>
+        <div
+          id="error"
+          class="error"
+          style="color: red; direction: rtl; margin-right: 110px"
+        ></div>
+        <button id="downloadImages" style="margin: 10px 100px; width: 500px">
+          Export
+        </button>
+      </div>
+    </div>
+
+    <!-- end popup -->
+
+    <!-- start successful message -->
+
+    <div class="successful">✓ download successfully</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+      //  data array
+
+      const items = [
+        {
+          name: "Adilette Ayoon شبشب",
+          description: "Description 1",
+          price: " 150 ",
+          size: "مقاسات ٤١.٤٦ جلد طبيعي",
+          image:
+            "https://assets.adidas.com/images/w_1880,f_auto,q_auto/81162d1df7c04c099734ae7601060a16_9366/GX1979_02_standard_hover_hover_hover_hover.jpg",
+        },
+        {
+          name: "ADIMULE شبشب",
+          description: "Description 2",
+          price: " 200 ",
+          size: "مقاسات ٤٢.٤٨ جلد طبيعي",
+          image:
+            "https://assets.adidas.com/images/w_450,f_auto,q_auto/62675fdf4bc948ba85efa34600d2e7a6_9366/G16220_02_standard_hover_hover.jpg",
+        },
+        {
+          name: "Adilette شبشب ",
+          description: "Description 3",
+          price: " 170 ",
+          size: "مقاسات ٤٣.٤٩ جلد طبيعي",
+          image:
+            "https://assets.adidas.com/images/w_450,f_auto,q_auto/ab5e0f0105804ddc94ecaf9c010c69f1_9366/HP9783_02_standard_hover.jpg",
+        },
+        {
+          name: "Adicane شبشب",
+          description: "Description 3",
+          price: " 250 ",
+          size: "مقاسات ٤٣.٤٩ جلد طبيعي",
+          image:
+            "https://assets.adidas.com/images/w_1880,f_auto,q_auto/80dd1463366c480494ddaf5000bd9d23_9366/HP9415_02_standard_hover.jpg",
+        },
+      ];
+
+      // Function to populate the table
+      function populateTable() {
+        const tableBody = document.querySelector("#itemsTable tbody");
+        tableBody.innerHTML = "";
+
+        items.forEach((item) => {
+          const row = document.createElement("tr");
+
+          const nameCell = document.createElement("td");
+          nameCell.textContent = item.name;
+          row.appendChild(nameCell);
+
+          const descriptionCell = document.createElement("td");
+          descriptionCell.textContent = item.description;
+          row.appendChild(descriptionCell);
+
+          const priceCell = document.createElement("td");
+          priceCell.textContent = item.price;
+          row.appendChild(priceCell);
+
+          const imageCell = document.createElement("td");
+          const imgElement = document.createElement("img");
+          imgElement.src = item.image;
+          imageCell.appendChild(imgElement);
+          row.appendChild(imageCell);
+
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Function to calculate font size based on text length
+      function calculateFontSize(text) {
+        const baseSize = 20;
+        const lengthFactor = 2;
+        return `${baseSize + text.length * lengthFactor}px`;
+      }
+
+      function resizeAndAddDesign(
+        imgUrl,
+        price,
+        sizeText,
+        position,
+        lineImgUrl,
+        lineImgPosition,
+        fontSize = "17",
+        fontStyle = "Cairo",
+        priceFontSize = "30",
+        priceFontStyle = "Roboto",
+        code = "OO6775",
+        number = "w43",
+        addToText = 0,
+        barHeight = 90
+      ) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          const badgeImg = new Image();
+          const lineImg = new Image();
+          const userWidth = document.getElementById("width").value || 400;
+          const userHeight = document.getElementById("height").value || 400;
+          if (
+            userWidth < 400 ||
+            userHeight < 400 ||
+            !/^\d+$/.test(userWidth) || // Checks if userWidth is a valid number (only digits)
+            !/^\d+$/.test(userHeight)
+          ) {
+            document.getElementById("error").textContent =
+              "يرجى إدخال أبعاد صحيحة (400 أو أكبر) وارقام فقط .";
+            return;
+          } else {
+            document.getElementById("error").textContent = "";
+          }
+
+          img.crossOrigin = "Anonymous";
+          img.onload = function () {
+            badgeImg.onload = function () {
+              lineImg.onload = function () {
+                const canvas = document.createElement("canvas");
+                canvas.width = userWidth;
+                canvas.height = userHeight;
+                const ctx = canvas.getContext("2d");
+                index = canvas.width;
+                if (canvas.height >= 500 && canvas.height < 700) {
+                  barHeight = 105;
+                } else if (canvas.height >= 700 && canvas.height < 900) {
+                  barHeight = 120;
+                } else if (canvas.height >= 900) {
+                  barHeight = 125;
+                }
+                // Draw the main image covering the upper part of the canvas
+                ctx.drawImage(
+                  img,
+                  0,
+                  0,
+                  canvas.width,
+                  canvas.height - barHeight
+                );
+
+                // Create the yellow background bar at the bottom of the canvas
+                ctx.fillStyle = "#ffeb3b"; // Yellow
+                ctx.fillRect(
+                  0,
+                  canvas.height - barHeight,
+                  canvas.width,
+                  barHeight
+                ); // Drawing the yellow bar at the bottom part of the canvas
+
+                // Draw the star badge image
+                const badgeWidth = canvas.width + 100;
+                const badgeHeight = canvas.height + 100;
+                ctx.drawImage(
+                  badgeImg,
+                  -165 - ((badgeWidth - 400) / 400) * 200,
+                  canvas.height - (280 + ((badgeHeight - 400) / 400) * 220),
+                  badgeWidth,
+                  badgeHeight
+                );
+
+                // Draw the line image at the specified position
+                if (canvas.width > 400) {
+                  addToText = (canvas.width - 400) / 400;
+                }
+                const lineImgWidth = 90;
+                const lineImgHeight = 10;
+                ctx.drawImage(
+                  lineImg,
+                  115 + addToText * 80,
+                  canvas.height - 60 - addToText * 30,
+                  lineImgWidth + addToText * 20,
+                  lineImgHeight
+                );
+
+                ctx.fillStyle = "red";
+                ctx.font = `bold   ${
+                  +fontSize + fontSize * addToText
+                }px ${priceFontStyle}`;
+                ctx.fillText(
+                  code,
+                  125 + addToText * 70,
+                  canvas.height - 60 - addToText * 30
+                );
+
+                ctx.fillStyle = "black";
+                ctx.font = `bold ${
+                  +fontSize + fontSize * addToText
+                }px ${priceFontStyle}`;
+                ctx.fillText(
+                  number,
+                  140 + addToText * 75,
+                  canvas.height - 40 - addToText * 10
+                );
+
+                ctx.fillStyle = "#ffffff";
+                ctx.font = `bold   ${
+                  +priceFontSize + (priceFontSize * addToText - 2)
+                }px ${priceFontStyle}`;
+                ctx.fillText(price, 25 - addToText * 10, canvas.height - 70);
+
+                ctx.fillStyle = "#000000";
+                ctx.font = `bold ${
+                  +fontSize + fontSize * addToText
+                }px ${fontStyle}`;
+                ctx.textAlign = "right";
+                ctx.fillText(
+                  "شبشب رجالي جلد طبيعي",
+                  canvas.width - 10,
+                  canvas.height - (60 + addToText * 32)
+                );
+
+                const dynamicFontSize = calculateFontSize(sizeText);
+                ctx.fillStyle = "#000000";
+                ctx.font = dynamicFontSize;
+                ctx.textAlign = "right";
+                ctx.fillText(
+                  sizeText,
+                  canvas.width - 10,
+                  canvas.height - (40 + addToText * 7)
+                );
+
+                ctx.fillStyle = "#ff0000";
+                ctx.font = ` ${
+                  +fontSize + fontSize * addToText
+                }px ${fontStyle}`;
+                ctx.fillText(
+                  "اضافه جمله هنا.. تضاف يدويا حسب الرغبه ",
+                  canvas.width - 10,
+                  canvas.height - 10
+                );
+
+                // Return the modified image as a blob
+                canvas.toBlob((blob) => resolve(blob), "image/jpeg");
+              };
+
+              lineImg.src = "./line.PNG";
+            };
+
+            badgeImg.src = "./price.png";
+          };
+          img.src = imgUrl;
+        });
+      }
+
+      // Function to download images as a zip file
+      async function downloadImagesAsZip() {
+        const zip = new JSZip();
+        const imgFolder = zip.folder("images");
+
+        const downloadPromises = items.map(async (item, index) => {
+          const position = index + 1; // Position in the array
+          const resizedBlob = await resizeAndAddDesign(
+            item.image,
+            item.price,
+            item.size,
+            position
+          );
+          imgFolder.file(`image${position}.jpg`, resizedBlob);
+        });
+
+        // Wait for all images to be resized and added to the zip
+        await Promise.all(downloadPromises);
+
+        // Get the file name from input or default to 'images.zip'
+        const zipFileName =
+          document.getElementById("zipFileName").value || "images";
+
+        // Generate the zip file and trigger download
+        zip.generateAsync({ type: "blob" }).then(function (blob) {
+          saveAs(blob, `${zipFileName}.zip`);
+        });
+        popupOverlay.classList.remove("active");
+        popupBox.classList.remove("active");
+        const success = document.querySelector(".successful");
+        success.style.transform = "translateX(0)";
+        setTimeout(() => {
+          success.style.transform = "translateX(150%)";
+        }, 2000);
+      }
+      // Event listener for the download button
+      document
+        .getElementById("downloadImages")
+        .addEventListener("click", downloadImagesAsZip);
+
+      // Initial population of the table
+      populateTable();
+      const popupOverlay = document.getElementById("popupOverlay");
+      const popupBox = document.getElementById("popupBox");
+      const openPopupBtn = document.querySelector(".open-popup-btn");
+      const closeBtn = document.getElementById("closeBtn");
+
+      // Function to open the popup
+
+      openPopupBtn.addEventListener("click", () => {
+        popupOverlay.classList.add("active");
+        popupBox.classList.add("active");
+      });
+
+      // Function to close the popup
+
+      popupOverlay.addEventListener("click", (e) => {
+        if (e.target === popupOverlay) {
+          popupOverlay.classList.remove("active");
+          popupBox.classList.remove("active");
+          document.getElementById("width").value = "";
+          document.getElementById("height").value = "";
+          document.getElementById("error").textContent = "";
+        }
+      });
+    </script>
+  </body>
+</html>
